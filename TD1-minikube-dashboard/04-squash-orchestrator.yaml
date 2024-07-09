@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: squash-autom
+  name: squash-autom
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: squash-autom
+  template:
+    metadata:
+      labels:
+        app: squash-autom
+    spec:
+      containers:
+      - name: orchestrator
+        image: squashtest/squash-orchestrator:4.11.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 7774
+          protocol: TCP
+        - containerPort: 7775
+          protocol: TCP
+        - containerPort: 7776
+          protocol: TCP
+        - containerPort: 7796
+          protocol: TCP
+        - containerPort: 38368
+          protocol: TCP
+        - containerPort: 34537
+          protocol: TCP
+        - containerPort: 24368
+          protocol: TCP
+        - containerPort: 12312
+          protocol: TCP
+        resources:
+          limits:
+            memory: 1.5G
+          requests:
+            cpu: "1.5"
+            memory: 1.5G
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: squash-autom
+spec:
+  selector:
+    app: squash-autom
+  ports:
+  - name: receptionist
+    port: 7774
+    protocol: TCP
+    targetPort: 7774
+  - name: eventbus
+    port: 38368
+    protocol: TCP
+    targetPort: 38368
+  - name: localstore
+    port: 34537
+    protocol: TCP
+    targetPort: 34537
+  - name: insightcollector
+    port: 7796
+    protocol: TCP
+    targetPort: 7796
+  - name: observer
+    port: 7775
+    protocol: TCP
+    targetPort: 7775
+  - name: killswitch
+    port: 7776
+    protocol: TCP
+    targetPort: 7776
+  - name: agentchannel
+    port: 24368
+    protocol: TCP
+    targetPort: 24368
+  - name: qualitygate
+    port: 12312
+    protocol: TCP
+    targetPort: 12312

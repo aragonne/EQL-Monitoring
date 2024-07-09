@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-squash-tm
+data:
+  squash.tm.cfg.properties: |
+    management.endpoints.enabled-by-default = true
+    management.endpoints.web.exposure.include = health,metrics
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-plugin-tm
+data:
+  start-plugins.cfg: |
+    #### Autom-DevOps ####
+    result-publisher
+    squashautom-community
+    testplan-retriever-community
+    scm-git
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mariadb
+  name: mariadb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+  template:
+    metadata:
+      labels:
+        app: mariadb
+    spec:
+      containers:
+      - env:
+        - name: MARIADB_USER
+          value: squashtm
+        - name: MARIADB_PASSWORD
+          value: squashtm
+        - name: MARIADB_ROOT_PASSWORD
+          value: squashtm
+        - name: MARIADB_DATABASE
+          value: squashtm
+        image: mariadb:10.6
+        imagePullPolicy: IfNotPresent
+        name: mariadb
+        ports:
+        - containerPort: 3306
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /docker-entrypoint-initdb.d
+          name: database-init
+        - mountPath: /etc/mysql/conf.d
+          name: database-conf
+
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - emptyDir: {}
+        name: database-init
+      - emptyDir: {}
+        name: database-conf
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-mariadb
+spec:
+  ports:
+  - name: mariadb
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: mariadb

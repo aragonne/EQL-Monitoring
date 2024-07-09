@@ -1,0 +1,92 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: squash
+  name: squash
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: squash
+  template:
+    metadata:
+      labels:
+        app: squash
+    spec:
+      containers:
+      - env:
+        - name: SQTM_DB_TYPE
+          value: mariadb
+        - name: SQTM_DB_HOST
+          value: svc-mariadb
+        - name: SQTM_DB_NAME
+          value: squashtm
+        - name: SQTM_DB_USERNAME
+          value: squashtm
+        - name: SQTM_DB_PASSWORD
+          value: squashtm
+        image: squashtest/squash-tm:latest
+        imagePullPolicy: Always
+        name: squash-tm
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources:
+          limits:
+            memory: 2Gi
+            cpu: 1000m
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - name: squash-tm-config
+          mountPath: /opt/squash-tm/conf/squash.tm.cfg.properties
+          subPath: squash.tm.cfg.properties
+        - name: squash-tm-plugins
+          mountPath: /opt/squash-tm/conf/start-plugins.cfg
+          subPath: start-plugins.cfg
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: squash-tm-config
+        configMap:
+          name: config-squash-tm
+      - name: squash-tm-plugins
+        configMap:
+          name: config-plugin-tm
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: svc-squash
+spec:
+  type: LoadBalancer
+  ports:
+  - name: squash-tm
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: squash
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: squash
+spec:
+  rules:
+  - host: squashtm.local.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: svc-squash
+            port:
+              name: squash-tm
+        path: /squash
+        pathType: Prefix

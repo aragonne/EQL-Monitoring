@@ -1,18 +1,95 @@
 server:
   service:
     type: LoadBalancer
-  serverFiles:
-    ## Alerts configuration
-    ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
-    alerting_rules.yml: {}
-    # groups:
-    #   - name: Instances
-    #     rules:
-    #       - alert: InstanceDown
-    #         expr: up == 0
-    #         for: 5m
-    #         labels:
-    #           severity: page
-    #         annotations:
-    #           description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 5 minutes.'
-    #           summary: 'Instance {{ $labels.instance }} down'
+serverFiles:
+  ## Alerts configuration
+  ## Ref: https://prometheus.io/docs/prometheus/latest/configuration/alerting_rules/
+  alerting_rules.yml:
+    # AlertManager Explanation: Alert rules are organized into groups
+    # Groups allow related alerts to be managed together and can reduce notification noise
+    groups:
+      # First group for infrastructure alerts
+      - name: Infrastructure
+        rules:
+          # Alert 1: Detects when a service instance is down
+          - alert: InstanceDown
+            # Prometheus expression that triggers the alert
+            expr: up == 0
+            # The duration the condition must be true before firing
+            for: 2m
+            # Labels are used for routing, filtering, and severity indication
+            labels:
+              severity: critical
+              team: infra
+            # Annotations provide human-readable information
+            annotations:
+              description: '{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 2 minutes.'
+              summary: 'Instance {{ $labels.instance }} down'
+          
+          # Alert 2: High CPU usage alert
+          - alert: HighCPUUsage
+            # Alerts when CPU usage is above 80% for 5 minutes
+            expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+            for: 5m
+            labels:
+              severity: warning
+              team: infra
+            annotations:
+              description: '{{ $labels.instance }} has high CPU usage ({{ $value | printf "%.2f" }}%) for more than 5 minutes.'
+              summary: 'High CPU usage on {{ $labels.instance }}'
+      
+      # Second group for application-specific alerts
+      - name: SquashTM
+        rules:
+          # Alert 3: Database memory usage alert
+          - alert: MariaDBHighMemoryUsage
+            # Alerts when MariaDB memory usage is over 80%
+            expr: container_memory_usage_bytes{container="mariadb"} / container_spec_memory_limit_bytes{container="mariadb"} * 100 > 80
+            for: 10m
+            labels:
+              severity: warning
+              application: squash-tm
+              component: database
+            annotations:
+              description: 'MariaDB memory usage is {{ $value | printf "%.2f" }}% for more than 10 minutes.'
+              summary: 'High memory usage in MariaDB container'
+              action: 'Check for memory leaks or consider increasing limit'
+          
+          # Alert 4: Low CPU utilization alert (could indicate problems)
+          - alert: OrchestratorLowCPU
+            # Alerts when orchestrator CPU usage is below 20% when it should be higher
+            expr: avg(rate(container_cpu_usage_seconds_total{container="orchestrator"}[5m])) * 100 < 20
+            for: 15m
+            labels:
+              severity: info
+              application: squash-tm
+              component: orchestrator
+            annotations:
+              description: 'Orchestrator CPU usage is unexpectedly low ({{ $value | printf "%.2f" }}%) for 15 minutes.'
+              summary: 'Low CPU usage on orchestrator component'
+              action: 'Verify orchestrator is processing tasks correctly'
+          
+          # Alert 5: Service response time degradation
+          - alert: SquashTMHighLatency
+            # Alerts when HTTP request latency is high
+            expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{app="squash-tm"}[5m])) by (le)) > 2
+            for: 5m
+            labels:
+              severity: warning
+              application: squash-tm
+              component: api
+            annotations:
+              description: '95th percentile of HTTP request latency is {{ $value | printf "%.2f" }}s for 5 minutes.'
+              summary: 'Squash-TM API response time degradation'
+
+          # Alert 6: Squash is down
+          - alert: SquashTMDown
+            expr: absent(kube_pod_status_ready{namespace="squash",pod=~"squash-tm-.*"}) or kube_pod_status_ready{namespace="squash",pod=~"squash-tm-.*"} == 0
+            for: 5m
+            labels:
+              severity: warning
+              application: squash-tm
+              component: api
+            annotations:
+              description: 'Squash-TM is down for more than 5 minutes.'
+              summary: 'Squash-TM is down'

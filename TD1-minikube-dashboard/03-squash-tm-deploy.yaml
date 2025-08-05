@@ -18,9 +18,9 @@ spec:
       containers:
       - env:
         - name: SQTM_DB_TYPE
-          value: mariadb
+          value: postgresql
         - name: SQTM_DB_HOST
-          value: svc-mariadb
+          value: svc-postgresql
         - name: SQTM_DB_NAME
           value: squashtm
         - name: SQTM_DB_USERNAME
@@ -44,9 +44,6 @@ spec:
         - name: squash-tm-config
           mountPath: /opt/squash-tm/conf/squash.tm.cfg.properties
           subPath: squash.tm.cfg.properties
-        - name: squash-tm-plugins
-          mountPath: /opt/squash-tm/conf/start-plugins.cfg
-          subPath: start-plugins.cfg
       restartPolicy: Always
       securityContext: {}
       terminationGracePeriodSeconds: 30
@@ -54,9 +51,6 @@ spec:
       - name: squash-tm-config
         configMap:
           name: config-squash-tm
-      - name: squash-tm-plugins
-        configMap:
-          name: config-plugin-tm
 
 ---
 apiVersion: v1

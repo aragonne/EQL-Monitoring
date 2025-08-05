@@ -14,7 +14,7 @@ helm repo add stable https://charts.helm.sh/stable
 helm repo update
 
 # 2 Install loki
-helm upgrade --install loki --namespace=loki-stack grafana/loki -f 01-values-loki.yaml 
+helm upgrade --install loki --create-namespace --namespace loki-stack grafana/loki -f 01-values-loki.yaml 
 
 # 3 Install Prometheus 
 helm upgrade --install prometheus prometheus-community/prometheus --create-namespace --namespace monitoring -f 02-values-prometheus.yaml

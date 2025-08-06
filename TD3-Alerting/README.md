@@ -1,17 +1,17 @@
-# TD3 - AlertManager and Alert Configuration
+# TD3 - Alert Configuration
 
 This guide will walk you through setting up and understanding alerts for the Squash-TM application deployed on Minikube. Alerting is a crucial component of proactive monitoring, enabling you to identify and respond to potential issues before they impact your users.
 
-## Understanding AlertManager
+## Understanding Alerting
 
-AlertManager is a component of the Prometheus ecosystem that handles alerts sent by client applications such as Prometheus server. It takes care of deduplicating, grouping, and routing alerts to the correct receiver (such as email, Slack, or PagerDuty). Key features include:
+Alerts are a part of the monitoring ecosystem that can be handled by client applications such as Prometheus server. It takes care of deduplicating, grouping, and routing alerts to the correct receiver (such as email, Slack, or PagerDuty). Key features include:
 
 - **Grouping**: Combines similar alerts to reduce notification noise
 - **Inhibition**: Suppresses notifications for certain alerts if others are already firing
 - **Silences**: Temporarily mute alerts based on specific criteria
 - **High Availability**: Can be configured in a clustered mode for redundancy
 
-## 1 - Prometheus AlertManager Configuration
+## 1 - Prometheus Configuration
 
 The file `02-values-prometheus-with-alerts.yaml` contains example alert rules that demonstrate different types of alerts.
 
@@ -30,10 +30,12 @@ kubectl get svc -A | grep prometheus-server
 The alert rules in `02-values-prometheus-with-alerts.yaml` are organized into groups:
 
 #### Infrastructure Alerts
+
 - **InstanceDown**: Detects when any monitored service is down for over 2 minutes
 - **HighCPUUsage**: Alerts when CPU usage exceeds 80% for 5 minutes
 
 #### Squash-TM Application Alerts
+
 - **MariaDBHighMemoryUsage**: Triggers when MariaDB memory usage exceeds 80%
 - **OrchestratorLowCPU**: Alerts on unexpectedly low CPU usage (<20%) which might indicate issues
 - **SquashTMHighLatency**: Monitors API response time degradation
@@ -77,4 +79,4 @@ In Grafana, navigate to Alerting > Alert Rules, and create:
 2. Use Grafana Explorer to build and test the query
 3. Add the query as an alert in the `02-values-prometheus-with-alerts.yaml` file
 4. Test triggering the alert by creating the condition (e.g., high CPU load)
-5. Observe how AlertManager handles the alert and sends notifications
+5. Observe how Prometheus handles the alert and sends notifications

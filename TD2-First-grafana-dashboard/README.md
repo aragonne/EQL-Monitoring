@@ -18,6 +18,8 @@ helm upgrade --install loki --create-namespace --namespace loki-stack grafana/lo
 
 # 3 Install Prometheus 
 helm upgrade --install prometheus prometheus-community/prometheus --create-namespace --namespace monitoring -f 02-values-prometheus.yaml
+
+helm upgrade --install promtail --create-namespace --namespace loki-stack grafana/promtail -f 04-values-promtail.yaml 
 ```
 
 ## 2 - Deploy Grafana
